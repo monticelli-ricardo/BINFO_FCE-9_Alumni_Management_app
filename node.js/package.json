@@ -2,9 +2,9 @@
     "name": "alumni-management",
     "version": "1.0.0",
     "description": "BINFO-CEP Alumni Management System",
-    "main": "server/server.js",
+    "main": "Alumni_Management_App/server/server.js",
     "scripts": {
-      "start": "node server/server.js"
+      "start": "node Alumni_Management_App/server/server.js"
     },
     "dependencies": {
       "express": "^4.17.1",

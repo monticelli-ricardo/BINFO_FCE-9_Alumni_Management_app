@@ -1,4 +1,5 @@
 *.zip
 node.js/package-lock.json
+node.js/node_modules
 redis/redis-data/
 

@@ -7,6 +7,7 @@ const bodyParser = require('body-parser');
 const app = express();
 const port = 8081;
 
+// Redis client connection configuration
 const redisClient = redis.createClient({
   host: 'redis',
   port: 6379,
@@ -73,5 +74,5 @@ app.get('/students/:id', (req, res) => {
 });
 
 app.listen(port, () => {
-  console.log(`Server is running on port ${port}`);
+  console.log(`[JS app] Server running at http://localhost:${port}`);
 });
