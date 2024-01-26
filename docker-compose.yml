@@ -1,0 +1,39 @@
+version: "1"
+
+services:
+  node.js:
+     build: ./node.js
+     links:
+         - redis
+     ports:
+         - 8081
+     volumes:
+         - ./node.js:/app
+     hostname:
+         nodejs
+     deploy:
+          mode: replicated
+          replicas: 3
+
+  redis:
+     image: redis:latest
+     ports:
+          - 6379:6379
+     volumes:
+          - ./redis/redis-data:/data                             # Redis Data Persistence
+          - ./redis/redis.conf:/usr/local/etc/redis/redis.conf   # Mount the custom redis.conf file
+
+  nginx:
+    build: ./nginx/
+    ports:
+          - "8080:80"
+    depends_on:
+          - node.js
+          - redis
+    links:
+          - node.js
+          - redis
+
+volumes:
+  redis-data:
+    
