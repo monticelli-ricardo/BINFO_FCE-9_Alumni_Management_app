@@ -1,0 +1,74 @@
+<!-- index.html -->
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Student Management System</title>
+</head>
+<body>
+    <div id="app">
+        <h1>Welcome to Student Management System</h1>
+        <ul>
+            <li><a href="#" @click="showCreateStudentForm">Create Student</a></li>
+            <li><a href="#" @click="showCheckStudentSection">Check Student</a></li>
+            <li><a href="#" @click="getTotalStudents">Total Students Registered</a></li>
+        </ul>
+
+        <div id="warningMessage">{{ warningMessage }}</div>
+
+        <div v-show="createStudentFormVisible">
+            <h2>Create Student</h2>
+            <!-- Form for creating a new student -->
+            <form @submit.prevent="createStudent">
+                <label for="studentName">Name:</label>
+                <input type="text" id="studentName" v-model="newStudent.name" required>
+
+                <label for="studentEmployers">Employers:</label>
+                <input type="text" id="studentEmployers" v-model="newStudent.employers" required>
+
+                <label for="studentStartDate">Start Date:</label>
+                <input type="date" id="studentStartDate" v-model="newStudent.start_date" required>
+
+                <!-- Add other input fields for student information -->
+
+                <button type="submit">Register Student</button>
+            </form>
+        </div>
+
+        <div v-show="checkStudentSectionVisible">
+            <h2>Check Student</h2>
+            <!-- Form for checking a student -->
+            <form @submit.prevent="checkStudent">
+                <label for="checkStudentName">Name:</label>
+                <input type="text" id="checkStudentName" v-model="checkStudentName" required>
+
+                <button type="submit">Check Student</button>
+            </form>
+
+            <!-- Display student details -->
+            <div v-if="studentData.id">
+              <h3>Student Information</h3>
+              <ul>
+                  <li>ID: {{ studentData.id }}</li>
+                  <li>Name: {{ studentData.name }}</li>
+                  <li>Employers: {{ studentData.employers }}</li>
+                  <li>Start Date: {{ studentData.start_date }}</li>
+                  <!-- Add other properties as needed -->
+              </ul>
+            </div>
+
+            <div id="studentInfo">
+                <h3>Student Information</h3>
+                <ul>
+                    <li v-for="(value, key) in studentData" :key="key">{{ key }}: {{ value }}</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/vue@2"></script>
+    <script src="main.js"></script>
+</body>
+</html>

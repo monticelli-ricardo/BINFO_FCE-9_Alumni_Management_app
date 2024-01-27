@@ -73,6 +73,33 @@ app.get('/students/:id', (req, res) => {
   });
 });
 
+// API to get students by name
+app.get('/students/name/:name', (req, res) => {
+  const { name } = req.params;
+  const matchingStudents = [];
+
+  redisClient.keys('*', (err, keys) => {
+    if (err) throw err;
+
+    keys.forEach(key => {
+      redisClient.get(key, (err, data) => {
+        if (err) throw err;
+        const student = JSON.parse(data);
+
+        // Check if the student's name matches the provided name
+        if (student.name === name) {
+          matchingStudents.push(student);
+        }
+
+        // Send the response once all keys are processed
+        if (keys.indexOf(key) === keys.length - 1) {
+          res.json(matchingStudents);
+        }
+      });
+    });
+  });
+});
+
 app.listen(port, () => {
   console.log(`[JS app] Server running at http://localhost:${port}`);
 });
