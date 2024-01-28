@@ -4,7 +4,9 @@ services:
   nodejs:
      build: ./node.js
      links:
-         - redis    
+         - redis
+     depends_on:
+         - redis   
      ports:
          - 8081:8080
      volumes:
@@ -14,9 +16,9 @@ services:
     #      replicas: 3
 
   redis:
-     image: redis:latest
+     build: ./redis
      ports:
-          - 6379:6379
+          - 6379
      volumes:
           - ./redis/redis-data:/data                             # Redis Data Persistence
           - ./redis/redis.conf:/usr/local/etc/redis/redis.conf   # Mount the custom redis.conf file

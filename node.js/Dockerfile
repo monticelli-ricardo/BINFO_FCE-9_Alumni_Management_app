@@ -7,7 +7,8 @@ WORKDIR /app
 COPY package*.json ./app/
 
 RUN npm install | \
-    npm install express && npm install redis && npm install body-parser | \
+    ## Modules and depencencies 
+    npm install express && npm install redis && npm install body-parser && npm install uuid | \ 
     npm update
 
 ADD . /app
