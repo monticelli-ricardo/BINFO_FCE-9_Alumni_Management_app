@@ -4,13 +4,14 @@ FROM node:14
 
 WORKDIR /app
 
-COPY package*.json ./
+COPY package*.json ./app/
 
-RUN npm install
+RUN npm install | \
+    npm install express && npm install redis && npm install body-parser | \
+    npm update
 
-# Copy the application code
-COPY . .
+ADD . /app
 
-EXPOSE 8081
+EXPOSE 8080
 
-CMD ["node", "Alumni_Management_App/server/server.js"]
+CMD ["node", "--trace-warnings", "/app/server.js"]

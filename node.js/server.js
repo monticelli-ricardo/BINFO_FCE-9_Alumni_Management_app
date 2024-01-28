@@ -1,19 +1,26 @@
 // server.js
+import express from 'express';
+import bodyParser from 'body-parser';
+import { createClient } from 'redis';
 
-const express = require('express');
-const redis = require('redis');
-const bodyParser = require('body-parser');
-
+// Server-side app using Express framework
 const app = express();
 const port = 8081;
 
 // Redis client connection configuration
-const redisClient = redis.createClient({
+const redisClient = createClient({
   host: 'redis',
   port: 6379,
 });
 
+// Middleware to log incoming requests
 app.use(bodyParser.json());
+app.use((req, res, next) => {
+    console.log(`Received request: ${req.method} ${req.url}`);
+    next();
+});
+// Serve client-side static assets from the "public" directory
+app.use(express.static(new URL('public', import.meta.url).pathname));
 
 // Student object Flyweight
 class Student {

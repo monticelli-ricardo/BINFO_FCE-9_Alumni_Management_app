@@ -1,4 +1,5 @@
 // main.js
+import Vue from 'vue';  // Importing Vue from node_modules
 
 new Vue({
     el: '#app',
@@ -109,4 +110,4 @@ new Vue({
         }
         // Additional methods for other features (Update Student, Remove Student)
     }
-});
+}).$mount('#app');
