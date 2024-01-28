@@ -1,5 +1,4 @@
 // main.js
-import Vue from 'vue';  // Importing Vue from node_modules
 
 new Vue({
     el: '#app',
@@ -9,8 +8,10 @@ new Vue({
         checkStudentSectionVisible: false,
         newStudent: {
             name: '',
+            description: '',
             employers: '',
             start_date: '',
+            end_date: ''
             // Add other properties here
         },
         checkStudentName: '',
@@ -18,7 +19,7 @@ new Vue({
     },
     methods: {
 
-        // Function to profice the "Create Student" form
+        // Function to provide the "Create Student" form
         showCreateStudentForm() {
             this.createStudentFormVisible = true;
             this.checkStudentSectionVisible = false;
@@ -36,8 +37,11 @@ new Vue({
         resetForm() {
             this.newStudent = {
                 name: '',
+                description: '',
                 employers: '',
                 start_date: '',
+                end_date: ''
+                // Add other properties here
             };
             this.checkStudentName = '';
             this.studentData = {};
@@ -58,12 +62,12 @@ new Vue({
                     this.warningMessage = 'Student created successfully';
                     this.resetForm();
                 } else {
-                    this.warningMessage = 'Error creating student';
+                    this.warningMessage = 'Error creating student.';
                 }
             })
             .catch(error => {
-                console.error('Error:', error);
-                this.warningMessage = 'An error occurred';
+                console.error('Error:', response);
+                this.warningMessage = 'An error occurred.' + error;
             });
         },
 
@@ -75,8 +79,8 @@ new Vue({
                 this.studentData = data;
             })
             .catch(error => {
-                console.error('Error:', error);
-                this.warningMessage = 'An error occurred';
+                console.error('Error:', response);
+                this.warningMessage = 'An error occurred.' + error;
             });
           // Assuming you want to display the student details immediately after checking
             // You can choose to remove this if not needed
@@ -91,8 +95,8 @@ new Vue({
                 this.studentData = data;
             })
             .catch(error => {
-                console.error('Error:', error);
-                this.warningMessage = 'An error occurred';
+                console.error('Error:', response);
+                this.warningMessage = 'An error occurred.' + error;
             });
         },
 
@@ -104,8 +108,8 @@ new Vue({
                 this.warningMessage = `Total Students Registered: ${data.totalStudents}`;
             })
             .catch(error => {
-                console.error('Error:', error);
-                this.warningMessage = 'An error occurred';
+                console.error('Error:', response);
+                this.warningMessage = 'An error occurred.' + error;
             });
         }
         // Additional methods for other features (Update Student, Remove Student)

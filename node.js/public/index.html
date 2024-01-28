@@ -5,7 +5,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <script src="https://cdn.jsdelivr.net/npm/vue@2"></script>
     <title>Student Management System</title>
+    
 </head>
 <body>
     <div id="app">
@@ -22,16 +24,20 @@
             <h2>Create Student</h2>
             <!-- Form for creating a new student -->
             <form @submit.prevent="createStudent">
-                <label for="studentName">Name:</label>
+                <label for="studentName"> Student Name:</label>
                 <input type="text" id="studentName" v-model="newStudent.name" required>
 
-                <label for="studentEmployers">Employers:</label>
-                <input type="text" id="studentEmployers" v-model="newStudent.employers" required>
+                <label for="studentDescription">Student Description :</label>
+                <input type="text" id="studentDescription" v-model="newStudent.description" required>
+
+                <label for="studentEmployers">Student Employers:</label>
+                <input type="text" id="studentEmployers" v-model="newStudent.employers">
 
                 <label for="studentStartDate">Start Date:</label>
                 <input type="date" id="studentStartDate" v-model="newStudent.start_date" required>
 
-                <!-- Add other input fields for student information -->
+                <label for="studentEndDate">End Date:</label>
+                <input type="date" id="studentEndDate" v-model="newStudent.end_date" required>
 
                 <button type="submit">Register Student</button>
             </form>
@@ -51,10 +57,12 @@
             <div v-if="studentData.id">
               <h3>Student Information</h3>
               <ul>
-                  <li>ID: {{ studentData.id }}</li>
-                  <li>Name: {{ studentData.name }}</li>
-                  <li>Employers: {{ studentData.employers }}</li>
+                  <li>Student ID: {{ studentData.id }}</li>
+                  <li>Student Name: {{ studentData.name }}</li>
+                  <li>Student Description: {{ studentData.description }}</li>
+                  <li>Student Employers: {{ studentData.employers }}</li>
                   <li>Start Date: {{ studentData.start_date }}</li>
+                  <li>End Date: {{ studentData.end_date }}</li>
                   <!-- Add other properties as needed -->
               </ul>
             </div>
@@ -68,7 +76,6 @@
         </div>
     </div>
 
-    <script src="https://cdn.jsdelivr.net/npm/vue@2"></script>
     <script src="main.js"></script>
 </body>
 </html>
