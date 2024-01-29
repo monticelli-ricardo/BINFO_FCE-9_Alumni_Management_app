@@ -52,7 +52,7 @@
                 <label for="checkStudentName">Student Name:</label>
                 <input type="text" id="checkStudentName" v-model="checkStudentName" required>
         
-                <button type="submit">Check Student</button>
+                <button @click="checkStudent(this.checkStudentName)">Check Student</button>
             </form>
         
             <!-- Table to display student details -->
@@ -71,12 +71,26 @@
                 </thead>
                 <tbody>
                 <tr v-for="student in studentDataList" :key="student.id">
-                    <td>{{ student.id }}</td>
-                    <td>{{ student.name }}</td>
-                    <td>{{ student.description }}</td>
-                    <td>{{ student.employers }}</td>
-                    <td>{{ student.start_date }}</td>
-                    <td>{{ student.end_date }}</td>
+                    <td>
+                        {{ student.id }}
+                    </td>
+                    <!-- Display editable cells -->
+                    <td contenteditable="true" type="text" @blur="validateInput('name', student.name, student)">
+                        {{ student.name }}
+                    </td>
+                    <!-- Repeat the pattern for other fields -->
+                    <td contenteditable="true" type="text" @blur="validateInput('description', student.description, student)">
+                        {{ student.description }}
+                    </td>
+                    <td contenteditable="true" type="text" @blur="validateInput('employers', student.employers, student)">
+                        {{ student.employers }}
+                    </td>
+                    <td contenteditable="true" type="date" @blur="validateInput('start_date', student.start_date, student)">
+                        {{ student.start_date }}
+                    </td>
+                    <td contenteditable="true" type="date" @blur="validateInput('end_date', student.end_date, student)">
+                        {{ student.end_date }}
+                    </td>
                     <!-- Add other properties as needed -->
                     <td>
                     <button @click="updateStudent(student.id)">Update</button>

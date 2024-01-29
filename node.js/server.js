@@ -44,6 +44,7 @@ class Student {
     this.employers = employers;
     this.start_date = start_date;
     this.end_date = end_date;
+    // more properties if needed
   }
 }
 
@@ -87,7 +88,7 @@ app.post('/students', async (req, res) => {
 app.put('/students/update/:id', async (req, res) => {
   try {
     const { id } = req.params;
-    const { name, employers, start_date, end_date, description } = req.body;
+    const { name, description, employers, start_date, end_date } = req.body;
     console.log('[JS app] Update operation started.'); // Debugging line
 
     // Fetch existing student
@@ -103,17 +104,19 @@ app.put('/students/update/:id', async (req, res) => {
     
     // Create an UPDATEd student object
     const updatedStudent = new Student(
+      id,
       name || existingStudent.name,
+      description || existingStudent.description,
       employers || existingStudent.employers,
       start_date || existingStudent.start_date,
-      end_date || existingStudent.end_date,
-      description || existingStudent.description
+      end_date || existingStudent.end_date
+      // more properties if needed
     );
-    //Update Operation
-    // Overwritte the values for the same ID  
-    if(await redisClient.set(existingStudent.id, JSON.stringify(updatedStudent))){
+
+    //Update Operation, overwritte values for the same Key(ID)  
+    if(await redisClient.set(id, JSON.stringify(updatedStudent))){
       // Notify the user about successful operation
-      res.json({ success: true, message: 'Student updated successfully' });
+      res.json({ success: true, message: 'Student updated successfully' , updatedStudent});
       console.log('[JS app] Student updated successfully.'); // Debugging line
     
     } else {
@@ -191,7 +194,7 @@ app.get('/students/getId/:id', async (req, res) => {
 app.get('/students/getNames/:name', async (req, res) => {
   const { name } = req.params;
   const matchingStudents = [];
-  console.log('[JS app] Look up by name request received'); // Debugging line
+  console.log(`[JS app] Look up by ${name} request received.`); // Debugging line
   try {
     // Get all Keys from Redis, not the most efficient operation
     const keys = await redisClient.keys('*');
@@ -201,6 +204,7 @@ app.get('/students/getNames/:name', async (req, res) => {
       
       // Check if the student's name matches the regex pattern
       const searchPattern = new RegExp(name, 'i'); // 'i' makes the regex case-insensitive
+      console.log('[JS app] Search Pattern is: ', searchPattern); // Debugging line
       if (searchPattern.test(student.name)) {
           console.log('[JS app] Potential students found.', student); // Debugging line
           matchingStudents.push(student);
