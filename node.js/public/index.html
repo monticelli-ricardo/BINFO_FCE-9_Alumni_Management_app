@@ -11,12 +11,15 @@
 </head>
 <body>
     <div id="app">
-        <h1>Welcome to Student Management System</h1>
+        <h1>BINFO-CEP Student Management System</h1>
         <ul>
             <li><a href="#" @click="showCreateStudentForm">Create Student</a></li>
             <li><a href="#" @click="showCheckStudentSection">Check Student</a></li>
             <li><a href="#" @click="getTotalStudents">Total Students Registered</a></li>
         </ul>
+
+        <!-- Operation Messages -->
+        <h3 id="Message">{{ Message }}</h3>
 
         <div v-show="createStudentFormVisible">
             <h2>Create Student</h2>
@@ -52,32 +55,38 @@
                 <button type="submit">Check Student</button>
             </form>
         
-            <!-- Dropdown list of students -->
-            <label for="selectedStudent">Select Student:</label>
-            <select id="selectedStudent" v-model="selectedStudentId" @change="displaySelectedStudent">
-                <option v-for="student in studentDataList" :key="student.id" :value="student.id">{{ student.name }}</option>
-            </select>
-        
-            <!-- Display selected student details -->
-            <div v-if="selectedStudent.id">
-                <h3>Student Information</h3>
-                <ul>
-                    <li>Student ID: {{ selectedStudent.id }}</li>
-                    <li>Student Name: {{ selectedStudent.name }}</li>
-                    <li>Student Description: {{ selectedStudent.description }}</li>
-                    <li>Student Employers: {{ selectedStudent.employers }}</li>
-                    <li>Start Date: {{ selectedStudent.start_date }}</li>
-                    <li>End Date: {{ selectedStudent.end_date }}</li>
+            <!-- Table to display student details -->
+            <table v-if="studentDataList.length > 0">
+                <thead>
+                <tr>
+                    <th>Student ID</th>
+                    <th>Student Name</th>
+                    <th>Student Description</th>
+                    <th>Student Employers</th>
+                    <th>Start Date</th>
+                    <th>End Date</th>
                     <!-- Add other properties as needed -->
-                </ul>
-            </div>
+                    <th>Actions</th>
+                </tr>
+                </thead>
+                <tbody>
+                <tr v-for="student in studentDataList" :key="student.id">
+                    <td>{{ student.id }}</td>
+                    <td>{{ student.name }}</td>
+                    <td>{{ student.description }}</td>
+                    <td>{{ student.employers }}</td>
+                    <td>{{ student.start_date }}</td>
+                    <td>{{ student.end_date }}</td>
+                    <!-- Add other properties as needed -->
+                    <td>
+                    <button @click="updateStudent(student.id)">Update</button>
+                    <button @click="deleteStudent(student.id)">Delete</button>
+                    </td>
+                </tr>
+                </tbody>
+            </table>
         
-            <!-- Buttons for Update and Delete -->
-            <button @click="updateStudent">Update Student</button>
-            <button @click="deleteStudent">Delete Student</button>
-        </div>
         
-        <h3 id="Message">{{ Message }}</h3>
 
 
     <script src="main.js"></script>

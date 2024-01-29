@@ -65,6 +65,7 @@ new Vue({
                       'Student created successfully.'
                     );
                     this.resetForm();
+                    getTotalStudents();
                 } else {
                     alert(
                       'Error creating student.'
@@ -80,9 +81,9 @@ new Vue({
         },
 
         // Function to UPDATE the selected student
-        async updateStudent() {
+        async updateStudent(id) {
           try {
-              const response = await fetch(`/students/update/${this.selectedStudent.id}`, {
+              const response = await fetch(`/students/update/${id}`, {
                   method: 'PUT',
                   headers: {
                       'Content-Type': 'application/json',
@@ -113,9 +114,9 @@ new Vue({
         },
 
         // Function to DELETE the selected student
-        async deleteStudent() {
+        async deleteStudent(id) {
           try {
-              const response = await fetch(`/students/delete/${this.selectedStudent.id}`, {
+              const response = await fetch(`/students/delete/${id}`, {
                   method: 'DELETE',
                   headers: {
                     'Content-Type': 'application/json',
@@ -154,9 +155,6 @@ new Vue({
           .then(response => response.json())
           .then(data => {
               this.Message = `Total Students Registered: ${data.totalStudents}`;
-              alert(
-                'Total Students Registered: ', data.totalStudents
-              );
           })
           .catch(error => {
               console.error('Error:', response);
@@ -166,23 +164,25 @@ new Vue({
           });
         },
 
-        
-      //Function to fecth all students with similar names, in case we dont know the ID
+      // Function to fetch all students with similar names
       async checkStudent() {
-        console.log('/students/getNames/',this.checkStudentName);
-        await fetch(`/students/getNames/${this.checkStudentName}`)
-        .then(response => response.json())
-        .then(data => {
-            this.studentData = data;
-        })
-        .catch(error => {
-            console.error('Error:', response);
-            alert(
-              'An error occurred: ' , error
-            );
-        });
-        // // Assuming you want to display the student details immediately after checking
-        //this.getStudentDetails(data.id); // You can choose to remove this 
+        console.log('/students/getNames/', this.checkStudentName);
+        try {
+          const response = await fetch(`/students/getNames/${this.checkStudentName}`);
+          const data = await response.json();
+
+          if (Array.isArray(data) && data.length > 0) {
+            // Assuming the array contains student objects
+            this.studentDataList = data;
+            console.log(`/students/getNames/${this.checkStudentName} Result`, data);
+          } else {
+            console.error('Invalid or empty response:', data);
+            alert('An error occurred: Invalid or empty response');
+          }
+        } catch (error) {
+          console.error('Error:', error);
+          alert('An error occurred: ' + error.message);
+        }
       },
 
       // Function to display selected student details when dropdown selection changes
@@ -200,17 +200,16 @@ new Vue({
 
       // Function to fetch student details by ID and display them
       getStudentDetails(studentId) {
-        fetch(`/students/${studentId}`)
-        .then(response => response.json())
-        .then(data => {
-            this.studentData = data;
-        })
-        .catch(error => {
-            console.error('Error:', response);
-            alert(
-              'An error occurred: ' , error
-            );
-        });
+        fetch(`/students/getId/${studentId}`)
+          .then(response => response.json())  // Parse the response as JSON
+          .then(data => {
+            console.log(`/students/getId/${studentId} Response:`, data);
+            this.selectedStudent = data;  // Set the selected student
+          })
+          .catch(error => {
+            console.error('Error:', error);
+            alert('An error occurred: ', error);
+          });
       },
     }
 }).$mount('#app');
