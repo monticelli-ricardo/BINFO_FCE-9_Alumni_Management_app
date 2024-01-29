@@ -3,6 +3,7 @@ import express from 'express';
 import bodyParser from 'body-parser';
 import redis from 'redis';
 import { v4 as uuidv4 } from 'uuid'; // Import uuidv4 from uuid library
+//import util from 'util';
 
 // Server-side app using Express framework
 const app = express();
@@ -11,8 +12,21 @@ const port = 8081;
 // Redis client connection configuration
 const redisClient = redis.createClient({
   url: 'redis://redis:6379',
-  password: 'YourStrongPassword'
+  // host: 'redis-server',
+  // port: 6379,
+  password: 'YourStrongPassword',
+  maxRetriesPerRequest: 5, // Number of times a request (e.g., command) should be retried
+  enableReadyCheck: true, // Enable the ready check. Defaults to `false`.
+  enableAutoPipelining: true, // Enable auto-pipelining for multiple commands (non-blocking).
+  connectionName: 'mymaster', // Specify the name for the connection.
+  // ... other options
 });
+
+// Configuration for Server-side Asynchronous operations
+// const redisGetAsync = util.promisify(redisClient.get).bind(redisClient); // Redis GET promisified
+// const redisSetAsync = util.promisify(redisClient.set).bind(redisClient); // Redis SET promisified
+// const redisDelAsync = util.promisify(redisClient.del).bind(redisClient); // Redis DEL promisified
+// const redisKeysAsync = util.promisify(redisClient.keys).bind(redisClient); // Redis KEYS promisified
 
 // Check Redis client connection
 redisClient.on('connect', (err)=>{
@@ -20,6 +34,7 @@ redisClient.on('connect', (err)=>{
   else console.log('[JS app] Redis Client Connected!');
 });
 
+await redisClient.connect();
 
 app.use(bodyParser.json());
 
@@ -28,8 +43,8 @@ app.use(express.static(new URL('public', import.meta.url).pathname));
 
 // Student class
 class Student {
-  constructor(id, name, employers, start_date, end_date, description) {
-    this.id = id;
+  constructor(name, employers, start_date, end_date, description) {
+    //this.id = id;
     this.name = name;
     this.employers = employers;
     this.start_date = start_date;
@@ -38,124 +53,192 @@ class Student {
   }
 }
 
+// Common function to GET a student by ID
+const getStudentById = async (id) => {
+  try {
+    console.log('[JS app] Looking student by ID: ', id); // Debugging line
+    const studentData = await redisClient.get(id);
 
-// API to create a new student
+    // Validation step
+    if (!studentData) {
+      console.log('[JS app] Student updated failed. Student not found.'); // Debugging line
+      return res.status(404).json({ success: false, message: 'Student not found' });
+    } 
+    const existingStudent = JSON.parse(studentData);
+    console.log('[JS app] Student found: ', existingStudent); // Debugging line
+    return existingStudent;
+  } catch (error) {
+    console.error('Error getting student by ID:', error.message);
+    throw error;
+  }
+};
+
+// API to CREATE a new student based on user input
 app.post('/students', async (req, res) => {
-  // Collecting the student parameters from the Client-side request
+
   const { name, description, employers, start_date, end_date} = req.body;
 
-  // In case the request is incomplete, reject the operation
+  // Validate required fields
   if (!name || !start_date || !end_date || !description) {
-    return res.status(503).json({ success: false, message: 'Incomplete data. Please provide all required fields.' });
+    return res.status(400).json({ success: false, message: 'Incomplete data. Please provide all required fields.' });
   }
-
+  console.log('[JS app] CREATE student request received'); // Debugging line
   // Generate a unique ID using uuid
   const id = uuidv4();
+
   // Generating a new student object
-  const student = new Student(id, name, employers, start_date, end_date, description);
+  const student = new Student(name, description, employers, start_date, end_date);
   const studentData = JSON.stringify(student);
-  console.log(`[JS app] New student object to add: `, studentData);
-  
-  // Connect to Redis DB to inject the data 
-  await redisClient.connect();
-  // Check if the Redis client is ready before setting the data
-  if (redisClient.status === 'ready') {
-    await redisClient.set(studentData, (err) => {
-      if (err) { // Notify about the error
-        console.error('Error storing student data in Redis:', JSON.stringify(err));
-        return res.status(500).json({ success: false, message: 'Internal server error' });
-      } // Notify about succesfull creation
-      res.json({ success: true, message: 'Student created successfully' });
-    });
-  } else { // Notify about DB connection error
-    res.status(500).json({ success: false, message: 'Unable to connect to the database' });
+  console.log('[JS app] New student object to add: ', studentData); // Debugging line
+
+  try {
+ 
+    //await redisSetAsync(id, studentData); // Use the promisified version of set, Accepts a key-value pair as its argument.
+    if(await redisClient.set(id, studentData)){
+      // Notify the user about successfull operation.
+      res.json({ success: true, message: 'Student created successfully.' });
+      console.log('[JS app] Student created successfully.'); // Debugging line
+    } else{
+      res.json({ success: false, message: 'Create student operation failed.' });
+      console.log('[JS app] CREATE student operation failed.'); // Debugging line
+    }
+
+  } catch (error) { // Error handling
+    console.log('[JS app] Error creating student: ', error);
+    res.status(500).json({ success: false, message: 'Internal server error' });
   }
-  // Disconnect from the Redi DB
-  await redisClient.disconnect();
 });
 
+// API to UPDATE a student by ID parameter
+app.put('/students/update/:id', async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { name, employers, start_date, end_date, description } = req.body;
+    console.log('[JS app] Update operation started.'); // Debugging line
 
+    // Fetch existing student
+    const existingStudentData = await getStudentById(id);
+    const existingStudent = JSON.parse(existingStudentData);
+    console.log('[JS app] Student to update: ', existingStudent); // Debugging line
 
-// API to update a student
-app.put('/students/:id', async (req, res) => {
-  const { id } = req.params;
-  const { name, employers, start_date, end_date, description } = req.body;
-  const student = new Student(id, name, employers, start_date, end_date, description);
-  const studentData = JSON.stringify(student);
+    // Create an UPDATEd student object
+    const updatedStudent = new Student(
+      name || existingStudent.name,
+      employers || existingStudent.employers,
+      start_date || existingStudent.start_date,
+      end_date || existingStudent.end_date,
+      description || existingStudent.description
+    );
+    
+    // Overwritte the values for the same ID  
+    if(await redisClient.set(existingStudent.id, JSON.stringify(updatedStudent))){
+      // Notify the user about successful operation
+      res.json({ success: true, message: 'Student updated successfully' });
+      console.log('[JS app] Student updated successfully.'); // Debugging line
+    
+    } else {
+      // Notify the user about UNsuccessful operation
+      console.log('[JS app] Update operation failed.'); // Debugging line
+      return res.status(500).json({ success: false, message: 'Internal server error. Update operation failed.' });
+    }
+    
 
-  // Connect to Redis DB to inject the data 
-  await redisClient.connect();
-  await redisClient.set(studentData, (err) => {
-    if (err) throw err;
-    res.json({ success: true, message: 'Student updated successfully' });
-  });
-  // Disconnect from the Redis DB
-  await redisClient.disconnect();
+  } catch (error) { // Error handling
+    console.error('Error updating student:', error.message);
+    res.status(500).json({ success: false, message: 'Internal server error' });
+  }
 });
 
-// API to delete a student
-app.delete('/students/:id', async (req, res) => {
-  const { id } = req.params;
+// API to DELETE a student by ID paramenter
+app.delete('/students/delete/:id', async (req, res) => {
+  try {
+    const { id } = req.params;
+    console.log('[JS app] Delete operation started.'); // Debugging line
 
-  // Connect to Redis DB to inject the data 
-  await redisClient.connect();
-  await redisClient.del(id, (err) => {
-    if (err) throw err;
-    res.json({ success: true, message: 'Student deleted successfully' });
-  });
-  // Disconnect from the Redis DB
-  await redisClient.disconnect();
+    // Fetch existing student
+    const existingStudent = await getStudentById(id);
+
+    // Delete Operation, delete student from Redis database
+    if(await redisClient.del(existingStudent.id)){
+      //Notify the user about the successful operation
+      res.json({ success: true, message: 'Student deleted successfully' });
+      console.log('[JS app] Student deleted successfully.'); // Debugging line
+    } else { // Notify the user about the UNsuccessful operation
+      res.json({ success: false, message: 'Student deleted successfully' });
+      console.log('[JS app] Delete operation failed.'); // Debugging line
+    }
+
+
+  } catch (error) {
+    console.error('Error deleting student:', error.message);
+    console.log('[JS app] Delete operation failed.' , error); // Debugging line
+    res.status(500).json({ success: false, message: 'Internal server error' });
+  }
 });
 
-// API to get a student by ID
+// API to GET a student by ID parameter
 app.get('/students/:id', async (req, res) => {
-  const { id } = req.params;
+  try {
+    const { id } = req.params;
 
-  // Connect to Redis DB to inject the data 
-  await redisClient.connect();
-  await redisClient.get(id, (err, data) => {
-    if (err) throw err;
-    const student = JSON.parse(data);
-    res.json(student);
-  });
-  // Disconnect from the Redis DB
-  await redisClient.disconnect();
+    // Fetch existing student
+    const existingStudent = JSON.parse(await getStudentById(id));
+    res.json(existingStudent);
+    console.log('[JS app] Response back to client: ', res.statusMessage); // Debugging line
+
+  } catch (error) {
+    console.error('Error getting student:', error.message);
+    res.status(500).json({ success: false, message: 'Internal server error' });
+  }
 });
 
-// API to get students by name
-app.get('/students/name/:name', async (req, res) => {
+// API to GET students by name parameter
+app.get('/students/getNames/:name', async (req, res) => {
   const { name } = req.params;
   const matchingStudents = [];
+  console.log('[JS app] Look up by name request received'); // Debugging line
+  try {
+    // Get all Keys from Redis, not the most efficient operation
+    const keys = await redisClient.keys('*');
+    for (const key of keys) {
+      const data = await redisClient.get(key);
+      const student = JSON.parse(data);
+      // Check if the student's name matches the provided name
+      if (student.name === name) {
+        console.log('[JS app] A potential student found.', student); // Debugging line
+        matchingStudents.push(student);
+      }
+    }
+    res.json(matchingStudents);
+    console.log('[JS app] Response back to client: ', res.statusMessage); // Debugging line
+  } catch (error) {
+    console.error('Error retrieving students by name from Redis:', error.message);
+    res.status(500).json({ success: false, message: 'Internal server error' });
+  }
+});
 
-  // Connect to Redis DB to inject the data 
-  await redisClient.connect();
-  await redisClient.keys('*', (err, keys) => {
-    if (err) throw err;
-
-    keys.forEach(key => {
-      redisClient.get(key, (err, data) => {
-        if (err) throw err;
-        const student = JSON.parse(data);
-
-        // Check if the student's name matches the provided name
-        if (student.name === name) {
-          matchingStudents.push(student);
-        }
-
-        // Send the response once all keys are processed
-        if (keys.indexOf(key) === keys.length - 1) {
-          res.json(matchingStudents);
-        }
-      });
+// API to get the total number of registered students
+app.get('/students/total', async (req, res) => {
+  try {
+    console.log('[JS app] Getting the total number of registered students.'); // Debugging line
+    // Use a Redis command to get the total number of keys (students)
+    redisClient.dbSize((err, totalStudents) => {
+      if (err) {
+        console.error('Error getting total students:', err.message);
+        return res.status(500).json({ success: false, message: 'Internal server error' });
+      }
+      console.log('[JS app] Total numbered of registered students: ' , totalStudents); // Debugging line
+      return res.json({ success: true, totalStudents });
     });
-  });
-  // Disconnect from the Redis DB
-  await redisClient.disconnect();
+  } catch (error) {
+    console.error('Error getting total students:', error.message);
+    return res.status(500).json({ success: false, message: 'Internal server error' });
+  }
 });
 
 // Handle unhandled requests
 app.use((req, res) => {
-  res.status(404).json({ success: false, message: 'Request not handled.' });
+  res.status(500).json({ success: false, message: 'Request not handled.' });
 });
 
 // Start the server

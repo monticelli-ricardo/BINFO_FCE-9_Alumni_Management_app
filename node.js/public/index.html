@@ -18,8 +18,6 @@
             <li><a href="#" @click="getTotalStudents">Total Students Registered</a></li>
         </ul>
 
-        <div id="warningMessage">{{ warningMessage }}</div>
-
         <div v-show="createStudentFormVisible">
             <h2>Create Student</h2>
             <!-- Form for creating a new student -->
@@ -45,36 +43,42 @@
 
         <div v-show="checkStudentSectionVisible">
             <h2>Check Student</h2>
+        
             <!-- Form for checking a student -->
             <form @submit.prevent="checkStudent">
-                <label for="checkStudentName">Name:</label>
+                <label for="checkStudentName">Student Name:</label>
                 <input type="text" id="checkStudentName" v-model="checkStudentName" required>
-
+        
                 <button type="submit">Check Student</button>
             </form>
-
-            <!-- Display student details -->
-            <div v-if="studentData.id">
-              <h3>Student Information</h3>
-              <ul>
-                  <li>Student ID: {{ studentData.id }}</li>
-                  <li>Student Name: {{ studentData.name }}</li>
-                  <li>Student Description: {{ studentData.description }}</li>
-                  <li>Student Employers: {{ studentData.employers }}</li>
-                  <li>Start Date: {{ studentData.start_date }}</li>
-                  <li>End Date: {{ studentData.end_date }}</li>
-                  <!-- Add other properties as needed -->
-              </ul>
-            </div>
-
-            <div id="studentInfo">
+        
+            <!-- Dropdown list of students -->
+            <label for="selectedStudent">Select Student:</label>
+            <select id="selectedStudent" v-model="selectedStudentId" @change="displaySelectedStudent">
+                <option v-for="student in studentDataList" :key="student.id" :value="student.id">{{ student.name }}</option>
+            </select>
+        
+            <!-- Display selected student details -->
+            <div v-if="selectedStudent.id">
                 <h3>Student Information</h3>
                 <ul>
-                    <li v-for="(value, key) in studentData" :key="key">{{ key }}: {{ value }}</li>
+                    <li>Student ID: {{ selectedStudent.id }}</li>
+                    <li>Student Name: {{ selectedStudent.name }}</li>
+                    <li>Student Description: {{ selectedStudent.description }}</li>
+                    <li>Student Employers: {{ selectedStudent.employers }}</li>
+                    <li>Start Date: {{ selectedStudent.start_date }}</li>
+                    <li>End Date: {{ selectedStudent.end_date }}</li>
+                    <!-- Add other properties as needed -->
                 </ul>
             </div>
+        
+            <!-- Buttons for Update and Delete -->
+            <button @click="updateStudent">Update Student</button>
+            <button @click="deleteStudent">Delete Student</button>
         </div>
-    </div>
+        
+        <h3 id="Message">{{ Message }}</h3>
+
 
     <script src="main.js"></script>
 </body>
