@@ -173,20 +173,26 @@ new Vue({
       },
 
       // Function to fetch all students with similar names
-      async checkStudent(studentName) {
+      async checkStudent() {
+        // Get the input element by ID
+        const inputElement = document.getElementById('checkStudentName');
+        // Get the value from the input field
+        const studentName = inputElement.value;
+
         // Construct API query URL with specific fields
-        const apiUrl = `/students/getNames/${encodeURIComponent(
-          studentName,
-        )}`;
-        console.log('/students/getNames/', studentName);
+        const apiUrl = `/students/getNames/${encodeURIComponent(studentName)}`;
+        console.log('Calling ', apiUrl);
+        // Calling the Backend
         try {
           const response = await fetch(apiUrl);
-          const data = await response.json();
+          if(response.ok){ // Validation step
+            const data = await response.json();
 
-          if (Array.isArray(data) && data.length > 0) {
-            // Assuming the array contains student objects
-            this.studentDataList = data;
-            console.log(`API checkStudent(${studentName}) Response:`, response.status, response.statusText);
+            if (Array.isArray(data) && data.length > 0) {
+              // Assuming the array contains student objects
+              this.studentDataList = data;
+              console.log(`API checkStudent(${studentName}) Response:`, response.status, response.statusText);
+            }
           } else {
             console.error('Invalid or empty response:', data.message);
             alert('An error occurred: Invalid or empty response');
