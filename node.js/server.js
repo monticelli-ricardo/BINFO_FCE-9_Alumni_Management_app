@@ -67,9 +67,8 @@ app.post('/students', async (req, res) => {
   console.log('[JS app] New student object to add: ', studentData); // Debugging line
 
   try {
- 
-    //await redisSetAsync(id, studentData); // Use the promisified version of set, Accepts a key-value pair as its argument.
-    if(await redisClient.set(id, studentData)){
+    // Setting the new student into the Database under the Index
+    if(await Promise.all(redisClient.json.set(`ID:${id}`, '$', studentData))){
       // Notify the user about successfull operation.
       res.json({ success: true, message: 'Student created successfully.' });
       console.log('[JS app] Student created successfully.'); // Debugging line
@@ -103,7 +102,7 @@ app.put('/students/update/:id', async (req, res) => {
     console.log('[JS app] Student to update found: ', existingStudent); // Debugging line
     
     // Create an UPDATEd student object
-    const updatedStudent = new Student(
+    const tempStudent = new Student(
       id,
       // The ternary operator (`? :`) checks whether each property of the req.body is null or undefined and assigns the appropriate value accordingly
       name !== null ? name : existingStudent.name,
@@ -113,14 +112,17 @@ app.put('/students/update/:id', async (req, res) => {
       end_date !== null ? end_date : existingStudent.end_dated
       // more properties if needed
     );
-    const student = JSON.stringify(updatedStudent);
+    const updatedStudent = JSON.stringify(tempStudent);
     console.log('[JS app] Updated Student to set: ', updatedStudent); // Debugging line
+
     //Update Operation, overwritte values for the same Key(ID)  
-    if(await redisClient.set(id, student)){
+    if(await Promise.all(redisClient.json.set(`ID:${id}`, '$', updatedStudent))){
+
       // Notify the user about successful operation
-      res.json({ success: true, message: 'Student updated successfully', updatedStudent});
-      console.log('[JS app] Response back to client: ', updatedStudent); // Debugging line
+      res.json({ success: true, message: 'Student updated successfully', tempStudent});
+      console.log('[JS app] Response back to client: ', tempStudent); // Debugging line
       console.log('[JS app] Student updated successfully.'); // Debugging line
+      
     } else {
       // Notify the user about UNsuccessful operation
       console.log('[JS app] Update operation failed.'); // Debugging line
@@ -195,21 +197,30 @@ app.get('/students/getId/:id', async (req, res) => {
 // API to GET students by name parameter
 app.get('/students/getNames/:name', async (req, res) => {
   const { name } = req.params;
-  console.log(`[JS app] Look up by ${name} request received.`); // Debugging line
-  
+  console.log(`[JS app] Look up by [ ${name} ] request received.`); // Debugging line 
   
   try {
+
     // Perform a search using the RedisSearch index
-    //const searchResults = await redisClient.sendCommand('FT.SEARCH', ['studentsByName', `@name:${name}*`]);
-    const searchResults = await redisClient.ft.search('idx:studentsByName', `@name:${name}*`);
+    const searchResults = await redisClient.ft.search('students', `@name:${name}*`);
+
     // Validation step
     if(!searchResults){ 
       console.log('[JS app] Search had no results. The system DB might be empty.'); // Debugging line
       res.status(500).json({ success: false, message: 'Search had no results. The system DB might be empty.' });
+    } else {
+      console.log('[JS App] Search by Name result is:', searchResults);
     }
-    // Extract matching students from search results
-    const matchingStudents = searchResults.map(result => JSON.parse(result.obj));
-  
+
+    const matchingStudents = [];
+    // Check if searchResults is an array before using map
+    if (Array.isArray(searchResults)) {
+      // Extract matching students from search results
+      matchingStudents = searchResults.map(result => JSON.parse(result.obj));
+    } else {
+      console.log('[JS app] Mapping the Search by Name failed. The result from DB search is not an array.'); // Debugging line
+    }
+    
     // Return matching students to the client
     res.json(matchingStudents);
   
@@ -251,7 +262,7 @@ async function createRedisSearchIndex() {
   try {
 
     // Create the Index
-    const result = await redisClient.ft.create('idx:studentsByName', {
+    const result = await redisClient.ft.create('students', {
       '$.id': {
         type: SchemaFieldTypes.TAG,
         AS: 'id'
@@ -282,10 +293,8 @@ async function createRedisSearchIndex() {
       // Add other fields as needed
     }, {
       ON: 'HASH',
-      PREFIX: 'studentsByName:' // Adjust the prefix as needed
+      PREFIX: 'ID:' // Adjust the prefix as needed
     });
-    //const result = await redisClient.ft.create(indexName, indexDefinition);
-
     console.log('RedisSearch index created:', result);
   } catch (error) {
     console.error('Error creating RedisSearch index:', error.message);
