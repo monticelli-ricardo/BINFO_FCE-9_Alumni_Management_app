@@ -1,7 +1,7 @@
 // server.js
 import express from 'express';
 import bodyParser from 'body-parser';
-import redis from 'redis';
+import {AggregateSteps, AggregateGroupByReducers, createClient, SchemaFieldTypes} from 'redis';
 import { v4 as uuidv4 } from 'uuid'; // Import uuidv4 from uuid library
 
 
@@ -10,7 +10,7 @@ const app = express();
 const port = 8081;
 
 // Redis client connection configuration
-const redisClient = redis.createClient({
+const redisClient = createClient({
   url: 'redis://redis:6379',
   // host: 'redis',
   // port: 6379,
@@ -200,8 +200,8 @@ app.get('/students/getNames/:name', async (req, res) => {
   
   try {
     // Perform a search using the RedisSearch index
-    const searchResults = await redisClient.sendCommand('FT.SEARCH', ['studentsByName', `@name:${name}*`]);
-
+    //const searchResults = await redisClient.sendCommand('FT.SEARCH', ['studentsByName', `@name:${name}*`]);
+    const searchResults = await redisClient.ft.search('idx:studentsByName', `@name:${name}*`);
     // Validation step
     if(!searchResults){ 
       console.log('[JS app] Search had no results. The system DB might be empty.'); // Debugging line
@@ -249,11 +249,42 @@ app.use((req, res) => {
 // Function to create a RedisSearch index
 async function createRedisSearchIndex() {
   try {
-    // Redis index name
-    const indexName = 'studentsByName';
 
-    // Create the RedisSearch index
-    const result = await redisClient.sendCommand('FT.CREATE', [indexName, 'ON', 'HASH', 'PREFIX', '1', 'student:', 'SCHEMA', 'name', 'TEXT', 'description', 'TEXT', 'employers', 'TEXT', 'start_date', 'DATE', 'end_date', 'DATE']);
+    // Create the Index
+    const result = await redisClient.ft.create('idx:studentsByName', {
+      '$.id': {
+        type: SchemaFieldTypes.TAG,
+        AS: 'id'
+      },
+      '$.name': {
+        type: SchemaFieldTypes.TEXT,
+        AS: 'name',
+        SORTABLE: true
+      },
+      '$.description': {
+        type: SchemaFieldTypes.TEXT,
+        AS: 'description'
+      },
+      '$.employers': {
+        type: SchemaFieldTypes.TEXT,
+        AS: 'employers'
+      },
+      '$.start_date': {
+        type: SchemaFieldTypes.TEXT,
+        AS: 'start_date',
+        SORTABLE: true
+      },
+      '$.end_date': {
+        type: SchemaFieldTypes.TEXT,
+        AS: 'end_date',
+        SORTABLE: true
+      },
+      // Add other fields as needed
+    }, {
+      ON: 'HASH',
+      PREFIX: 'studentsByName:' // Adjust the prefix as needed
+    });
+    //const result = await redisClient.ft.create(indexName, indexDefinition);
 
     console.log('RedisSearch index created:', result);
   } catch (error) {
