@@ -1,6 +1,6 @@
 # node.js/Dockerfile
 
-FROM node:14
+FROM node:latest
 
 WORKDIR /app
 
