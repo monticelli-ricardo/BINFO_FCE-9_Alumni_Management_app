@@ -84,15 +84,33 @@ new Vue({
       },
 
       // Function to UPDATE the selected student
-      async updateStudent(student) {
+      async updateStudent(id) {
         try {
-            const response = await fetch(`/students/update/${student.id}`, {
-                method: 'PUT',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify(student),
-            });
+          // Get values from editable cells using ref attributes
+          const name = this.$refs[`name-${id}`][0].innerText.trim();
+          const description = this.$refs[`description-${id}`][0].innerText.trim();
+          const employers = this.$refs[`employers-${id}`][0].innerText.trim();
+          const start_date = this.$refs[`start_date-${id}`][0].innerText.trim();
+          const end_date = this.$refs[`end_date-${id}`][0].innerText.trim();
+          
+          // Build a updated student object
+          const updatedStudent = {
+            id: id,
+            name: name,
+            description: description,
+            employers: employers,
+            start_date: start_date,
+            end_date: end_date
+            // Add other properties here...
+          };
+          // the PUT request with updatedStudent as the body
+          const response = await fetch(`/students/update/${id}`, {
+              method: 'PUT',
+              headers: {
+                  'Content-Type': 'application/json',
+              },
+              body: JSON.stringify(updatedStudent),
+          });
 
             const result = await response.json();
 
@@ -102,8 +120,9 @@ new Vue({
                   'Student updated successfully.'
                 );
                 // Update client data 
-                console.log('Updating the table with: ', result.updatedStudent.name);
-                this.checkStudent(result.updatedStudent.name);
+                console.log('Updating the table with: ', result.tempStudent.name);
+                this.resetForm();
+                //this.checkStudent(result.tempStudent.name);
             } else {
                 console.error('Failed to update student:', result.message);
                 alert(
@@ -128,7 +147,7 @@ new Vue({
               },
             });
 
-            const temp = this.getStudentDetails(id);
+            //const temp = this.getStudentDetails(id);
             const result = await response.json();
             
             if (result.success) {

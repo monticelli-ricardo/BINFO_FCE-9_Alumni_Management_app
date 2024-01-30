@@ -68,7 +68,7 @@ app.post('/students', async (req, res) => {
 
   try {
     // Setting the new student into the Database under the Index
-    if(await Promise.all(redisClient.json.set(`ID:${id}`, '$', studentData))){
+    if(await redisClient.set(id, studentData)){
       // Notify the user about successfull operation.
       res.json({ success: true, message: 'Student created successfully.' });
       console.log('[JS app] Student created successfully.'); // Debugging line
@@ -88,7 +88,7 @@ app.put('/students/update/:id', async (req, res) => {
   try {
     const { id } = req.params;
     const { name, description, employers, start_date, end_date } = req.body;
-    console.log('[JS app] Update operation started.'); // Debugging line
+    console.log('[JS app] Update operation started. Newly input information: ', req.body); // Debugging line
 
     // Fetch existing student
     console.log('[JS app] Looking student by ID: ', id); // Debugging line
@@ -116,7 +116,7 @@ app.put('/students/update/:id', async (req, res) => {
     console.log('[JS app] Updated Student to set: ', updatedStudent); // Debugging line
 
     //Update Operation, overwritte values for the same Key(ID)  
-    if(await Promise.all(redisClient.json.set(`ID:${id}`, '$', updatedStudent))){
+    if(await redisClient.set(id, updatedStudent)){
 
       // Notify the user about successful operation
       res.json({ success: true, message: 'Student updated successfully', tempStudent});
@@ -197,33 +197,35 @@ app.get('/students/getId/:id', async (req, res) => {
 // API to GET students by name parameter
 app.get('/students/getNames/:name', async (req, res) => {
   const { name } = req.params;
+  const matchingStudents = []; // Response initialized
   console.log(`[JS app] Look up by [ ${name} ] request received.`); // Debugging line 
   
   try {
-
-    // Perform a search using the RedisSearch index
-    const searchResults = await redisClient.ft.search('students', `@name:${name}*`);
+    // Get all Keys from Redis, not the most efficient operation
+    const keys = await redisClient.keys('*');
 
     // Validation step
-    if(!searchResults){ 
-      console.log('[JS app] Search had no results. The system DB might be empty.'); // Debugging line
-      res.status(500).json({ success: false, message: 'Search had no results. The system DB might be empty.' });
+    if(!keys){ 
+      console.log('[JS app] Search Operation failed. The system DB might be empty.'); // Debugging line
+      res.status(500).json({ success: false, message: 'Search Operation failed. The system DB might be empty.' });
     } else {
-      console.log('[JS App] Search by Name result is:', searchResults);
-    }
-
-    const matchingStudents = [];
-    // Check if searchResults is an array before using map
-    if (Array.isArray(searchResults)) {
-      // Extract matching students from search results
-      matchingStudents = searchResults.map(result => JSON.parse(result.obj));
-    } else {
-      console.log('[JS app] Mapping the Search by Name failed. The result from DB search is not an array.'); // Debugging line
+      // iterate over the keys to pass only the candidates
+      for (const key of keys) {
+        // Pick a student from the Redis DB
+        const data = await redisClient.get(key);
+        const student = JSON.parse(data);
+  
+        // Check if the student's name matches the regex pattern
+        const searchPattern = new RegExp(name, 'i'); // 'i' makes the regex case-insensitive
+        if (searchPattern.test(student.name)) {
+            console.log('[JS app] Potential students found.'); // Debugging line
+            matchingStudents.push(student);
+        }
+      }
     }
     
     // Return matching students to the client
     res.json(matchingStudents);
-  
     console.log('[JS app] Response back to client: ', matchingStudents); // Debugging line
  
   } catch (error) {
@@ -257,54 +259,8 @@ app.use((req, res) => {
   res.status(500).json({ success: false, message: 'Request not handled.' });
 });
 
-// Function to create a RedisSearch index
-async function createRedisSearchIndex() {
-  try {
-
-    // Create the Index
-    const result = await redisClient.ft.create('students', {
-      '$.id': {
-        type: SchemaFieldTypes.TAG,
-        AS: 'id'
-      },
-      '$.name': {
-        type: SchemaFieldTypes.TEXT,
-        AS: 'name',
-        SORTABLE: true
-      },
-      '$.description': {
-        type: SchemaFieldTypes.TEXT,
-        AS: 'description'
-      },
-      '$.employers': {
-        type: SchemaFieldTypes.TEXT,
-        AS: 'employers'
-      },
-      '$.start_date': {
-        type: SchemaFieldTypes.TEXT,
-        AS: 'start_date',
-        SORTABLE: true
-      },
-      '$.end_date': {
-        type: SchemaFieldTypes.TEXT,
-        AS: 'end_date',
-        SORTABLE: true
-      },
-      // Add other fields as needed
-    }, {
-      ON: 'HASH',
-      PREFIX: 'ID:' // Adjust the prefix as needed
-    });
-    console.log('RedisSearch index created:', result);
-  } catch (error) {
-    console.error('Error creating RedisSearch index:', error.message);
-  }
-}
 
 // Start the server
 app.listen(port, () => {
   console.log(`[JS app] Server running at http://localhost:${port}`);
 });
-
-// Call the function to create Redis studentName index to improve the search by Name
-createRedisSearchIndex();

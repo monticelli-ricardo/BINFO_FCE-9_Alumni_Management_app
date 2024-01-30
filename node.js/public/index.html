@@ -15,7 +15,7 @@
         <ul>
             <li><a href="#" @click="showCreateStudentForm">Register Student</a></li>
             <li><a href="#" @click="showCheckStudentSection">Check Student</a></li>
-            <li><a href="#" @click="getTotalStudents">Total Students Registered</a></li>
+            <!--<li><a href="#" @click="getTotalStudents">Total Students Registered</a></li>-->
         </ul>
 
         <!-- Operation Messages -->
@@ -71,29 +71,26 @@
                 </thead>
                 <tbody>
                 <tr v-for="student in studentDataList" :key="student.id">
-                    <td>
-                        {{ student.id }}
-                    </td>
+                    <td>{{ student.id }}</td>
                     <!-- Display editable cells -->
-                    <td contenteditable="true" type="text" @blur="validateInput('name', student.name, student)">
+                    <td contenteditable="true" type="text" :ref="`name-${student.id}`">
                         {{ student.name }}
                     </td>
-                    <!-- Repeat the pattern for other fields -->
-                    <td contenteditable="true" type="text" @blur="validateInput('description', student.description, student)">
+                    <td contenteditable="true" type="text" :ref="`description-${student.id}`">
                         {{ student.description }}
                     </td>
-                    <td contenteditable="true" type="text" @blur="validateInput('employers', student.employers, student)">
+                    <td contenteditable="true" type="text" :ref="`employers-${student.id}`">
                         {{ student.employers }}
                     </td>
-                    <td contenteditable="true" type="date" @blur="validateInput('start_date', student.start_date, student)">
+                    <td contenteditable="true" type="date" :ref="`start_date-${student.id}`">
                         {{ student.start_date }}
                     </td>
-                    <td contenteditable="true" type="date" @blur="validateInput('end_date', student.end_date, student)">
+                    <td contenteditable="true" type="date" :ref="`end_date-${student.id}`">
                         {{ student.end_date }}
                     </td>
                     <!-- Add other properties as needed -->
                     <td>
-                    <button @click="updateStudent(student)">Update</button>
+                    <button @click="updateStudent(student.id)">Update</button>
                     <button @click="deleteStudent(student.id)">Delete</button>
                     </td>
                 </tr>
