@@ -79,8 +79,8 @@ It let's the user create / edit or update / delete / show BINFO-CEP alumni conta
 
     1.- Unzip the packege file
 
-    2.- Install all the Node.js dependecies (npm install) in the subdirectory "./node.js".
+    2.- Install all the Node.js dependecies ( npm install ) in the subdirectory "./node.js".
 
-    3.- Build the Docker-Compose stack (docker-compose up --build -d) .
+    3.- Build the Docker-Compose stack ( docker-compose up --build -d ) .
 
     4.- Test the application going to "http://localhost:8080/" .
