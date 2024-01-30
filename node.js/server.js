@@ -12,7 +12,7 @@ const port = 8081;
 // Redis client connection configuration
 const redisClient = redis.createClient({
   url: 'redis://redis:6379',
-  // host: 'redis-server',
+  // host: 'redis',
   // port: 6379,
   password: 'YourStrongPassword',
   maxRetriesPerRequest: 5, // Number of times a request (e.g., command) should be retried
@@ -105,20 +105,22 @@ app.put('/students/update/:id', async (req, res) => {
     // Create an UPDATEd student object
     const updatedStudent = new Student(
       id,
-      name || existingStudent.name,
-      description || existingStudent.description,
-      employers || existingStudent.employers,
-      start_date || existingStudent.start_date,
-      end_date || existingStudent.end_date
+      // The ternary operator (`? :`) checks whether each property of the req.body is null or undefined and assigns the appropriate value accordingly
+      name !== null ? name : existingStudent.name,
+      description !== null ? description : existingStudent.description,
+      employers !== null ? employers : existingStudent.employers,
+      start_date !== null ? start_date : existingStudent.start_date,
+      end_date !== null ? end_date : existingStudent.end_dated
       // more properties if needed
     );
-
+    const student = JSON.stringify(updatedStudent);
+    console.log('[JS app] Updated Student to set: ', updatedStudent); // Debugging line
     //Update Operation, overwritte values for the same Key(ID)  
-    if(await redisClient.set(id, JSON.stringify(updatedStudent))){
+    if(await redisClient.set(id, student)){
       // Notify the user about successful operation
-      res.json({ success: true, message: 'Student updated successfully' , updatedStudent});
+      res.json({ success: true, message: 'Student updated successfully', updatedStudent});
+      console.log('[JS app] Response back to client: ', updatedStudent); // Debugging line
       console.log('[JS app] Student updated successfully.'); // Debugging line
-    
     } else {
       // Notify the user about UNsuccessful operation
       console.log('[JS app] Update operation failed.'); // Debugging line
@@ -196,23 +198,31 @@ app.get('/students/getNames/:name', async (req, res) => {
   const matchingStudents = [];
   console.log(`[JS app] Look up by ${name} request received.`); // Debugging line
   try {
+
     // Get all Keys from Redis, not the most efficient operation
     const keys = await redisClient.keys('*');
+    if(keys.length < 1){
+      console.error('Redis database is empty. Nothing to check.');
+      res.status(500).json({ success: false, message: 'System database is empty. Nothing to check.' });
+    }
+    // Look for matching `names`
     for (const key of keys) {
       const data = await redisClient.get(key);
       const student = JSON.parse(data);
       
       // Check if the student's name matches the regex pattern
       const searchPattern = new RegExp(name, 'i'); // 'i' makes the regex case-insensitive
-      console.log('[JS app] Search Pattern is: ', searchPattern); // Debugging line
-      if (searchPattern.test(student.name)) {
+      console.log('[JS app] Search Pattern is: ', name); // Debugging line
+      if (searchPattern.test(student.name)) { // Match validation
           console.log('[JS app] Potential students found.', student); // Debugging line
-          matchingStudents.push(student);
+          matchingStudents.push(student); // pushed matched student
       }
     }
     // Return to client potential candidates
     res.json(matchingStudents); 
+
     console.log('[JS app] Response back to client: ', matchingStudents); // Debugging line
+ 
   } catch (error) {
     console.error('Error retrieving students by name from Redis:', error.message);
     res.status(500).json({ success: false, message: 'Internal server error' });

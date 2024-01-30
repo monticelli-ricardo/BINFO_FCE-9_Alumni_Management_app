@@ -1,5 +1,5 @@
 // main.js
-
+// Frontend side using Vue.js framework
 new Vue({
     el: '#app',
     data: {
@@ -84,14 +84,14 @@ new Vue({
       },
 
       // Function to UPDATE the selected student
-      async updateStudent(id) {
+      async updateStudent(student) {
         try {
-            const response = await fetch(`/students/update/${id}`, {
+            const response = await fetch(`/students/update/${student.id}`, {
                 method: 'PUT',
                 headers: {
                     'Content-Type': 'application/json',
                 },
-                body: JSON.stringify(this.selectedStudent),
+                body: JSON.stringify(student),
             });
 
             const result = await response.json();
@@ -102,6 +102,7 @@ new Vue({
                   'Student updated successfully.'
                 );
                 // Update client data 
+                console.log('Updating the table with: ', result.updatedStudent.name);
                 this.checkStudent(result.updatedStudent.name);
             } else {
                 console.error('Failed to update student:', result.message);
@@ -137,7 +138,7 @@ new Vue({
                 );
                 // Update local data or trigger a fetch if needed
                 this.getTotalStudents();
-                this.checkStudentName(temp.name);
+                this.showCheckStudentSection();
             } else {
                 console.error('Failed to delete student:', result.message);
                 alert(
@@ -187,7 +188,7 @@ new Vue({
             this.studentDataList = data;
             console.log(`API checkStudent(${studentName}) Response:`, response.status, response.statusText);
           } else {
-            console.error('Invalid or empty response:', data);
+            console.error('Invalid or empty response:', data.message);
             alert('An error occurred: Invalid or empty response');
           }
         } catch (error) {
