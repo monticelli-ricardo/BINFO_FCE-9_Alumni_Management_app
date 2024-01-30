@@ -51,13 +51,15 @@ It let's the user create / edit or update / delete / show BINFO-CEP alumni conta
 
       2.- The user provides a name and submit its with the function `checkStudent(studentName)` via API GET method.
 
-      3.- The system checks in the DB for all the DB.keys with the function `redisClient.keys('*')`, compares each one of them based on their `student.name` value and returns only those similar to `studentName` of the query in a table displayed in screen.
+      3.- The system searches in the DB for all the students with `student.name` similar to value `studentName` and returns them in a table displayed in screen.
 
       4.- The user navigates the table for the concerned the student and clicks on the delete button that will trigger the function: `deleteStudent(id)` via API DELETE method.
 
       5.- The system receives the student ID and performs a Redis delete operation: `redisClient.del(id)`.
 
       6.- The system notifies the use with the result of the DB operation.
+
+      7.- The system resets the form.
 
 
 ### Update a student in the system:
@@ -66,9 +68,9 @@ It let's the user create / edit or update / delete / show BINFO-CEP alumni conta
 
       2.- The user provides a name and submit its with the function `checkStudent(studentName)` via API GET method.
 
-      3.- The system checks in the DB for all the DB.keys with the function `redisClient.keys('*')`, compares each one of them based on their `student.name` value and returns only those similar to `studentName` of the query in a table displayed in screen.
+      3.- The system searches in the DB for all the students with `student.name` similar to value `studentName` and returns them in a table displayed in screen.
 
-      4.- The user navigates the table for the concerned the student and clicks on the update button that will trigger the function: `pdateStudent(id)` via API PUT method.
+      4.- The user navigates the table for the concerned the student and clicks on the update button that will trigger the function: `updateStudent(id)` via API PUT method.
 
       5.- The system receives the student ID, validates the student exists and performs a Redis set operation: `redisClient.set(id, JSON.stringify(updatedStudent))` where the `id` is the key and the `JSON.stringify(updatedStudent)` is the value.
 
@@ -84,3 +86,15 @@ It let's the user create / edit or update / delete / show BINFO-CEP alumni conta
     3.- Build the Docker-Compose stack ( docker-compose up --build -d ) .
 
     4.- Test the application going to "http://localhost:8080/" .
+
+
+## Potential Application Upgrades
+
+- Improve the search operation, an optional solution is to use RedisSearch Module instead of getting all Redis keys ( _redisClient.keys('*')_ ).
+   - [x]  Update Redis Dockerfile, to install RedisSearch Module and add it to the server start.
+   - [x]  Code a JS function ( _createRedisSearchIndex()_ ), to create a Redis Index and call it.
+   - [x]  Update the API to GET students by name parameter, replacing _redisClient.keys(*)_ by __redisClient.search('IndexName', '@name:${name}*')_ .
+
+- [] Improve the Student parameters, by adding: {School Department, Age, Sex, last_update, etc.}
+
+- [] Improve the search operation by grouping students (Redis keys) into sets, lists, or sorted sets based on certain student parameter.

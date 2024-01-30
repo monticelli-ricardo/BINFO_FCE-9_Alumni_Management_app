@@ -195,32 +195,21 @@ app.get('/students/getId/:id', async (req, res) => {
 // API to GET students by name parameter
 app.get('/students/getNames/:name', async (req, res) => {
   const { name } = req.params;
-  const matchingStudents = [];
   console.log(`[JS app] Look up by ${name} request received.`); // Debugging line
+  
+  // Perform search using RedisSearch
   try {
-
-    // Get all Keys from Redis, not the most efficient operation
-    const keys = await redisClient.keys('*');
-    if(keys.length < 1){
-      console.error('Redis database is empty. Nothing to check.');
-      res.status(500).json({ success: false, message: 'System database is empty. Nothing to check.' });
+    const searchResults = await redisClient.search('studentsByName', `@name:${name}*`);
+    if(!searchResults){ // Validation step
+      console.log('[JS app] Search had no results. The system DB might be empty.'); // Debugging line
+      res.status(500).json({ success: false, message: 'Search had no results. The system DB might be empty.' });
     }
-    // Look for matching `names`
-    for (const key of keys) {
-      const data = await redisClient.get(key);
-      const student = JSON.parse(data);
-      
-      // Check if the student's name matches the regex pattern
-      const searchPattern = new RegExp(name, 'i'); // 'i' makes the regex case-insensitive
-      console.log('[JS app] Search Pattern is: ', name); // Debugging line
-      if (searchPattern.test(student.name)) { // Match validation
-          console.log('[JS app] Potential students found.', student); // Debugging line
-          matchingStudents.push(student); // pushed matched student
-      }
-    }
-    // Return to client potential candidates
-    res.json(matchingStudents); 
-
+    // Extract matching students from search results
+    const matchingStudents = searchResults.map(result => JSON.parse(result.obj));
+  
+    // Return matching students to the client
+    res.json(matchingStudents);
+  
     console.log('[JS app] Response back to client: ', matchingStudents); // Debugging line
  
   } catch (error) {
@@ -254,8 +243,41 @@ app.use((req, res) => {
   res.status(500).json({ success: false, message: 'Request not handled.' });
 });
 
+// Function to create a RedisSearch index
+async function createRedisSearchIndex() {
+  try {
+    // Redis index name
+    const indexName = 'studentsByName';
+
+    // Define the index structure and options
+    const indexDefinition = {
+      fields: [
+        { name: 'id', type: 'STRING'},
+        { name: 'name', type: 'TEXT' },
+        { name: 'description', type: 'TEXT' },
+        { name: 'employers', type: 'TEXT' },
+        { name: 'start_date', type: 'DATE' },
+        { name: 'end_date', type: 'DATE' },
+        // Add other fields as needed
+      ],
+      index: {
+        indexType: 'HASH',
+      },
+    };
+
+    // Create the RedisSearch index
+    const result = await redisClient.ft(indexName, indexDefinition);
+
+    console.log('RedisSearch index created:', result);
+  } catch (error) {
+    console.error('Error creating RedisSearch index:', error.message);
+  }
+}
 
 // Start the server
 app.listen(port, () => {
   console.log(`[JS app] Server running at http://localhost:${port}`);
 });
+
+// Call the function to create Redis studentName index to improve the search by Name
+createRedisSearchIndex();
