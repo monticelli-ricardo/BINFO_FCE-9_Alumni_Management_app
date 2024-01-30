@@ -197,10 +197,13 @@ app.get('/students/getNames/:name', async (req, res) => {
   const { name } = req.params;
   console.log(`[JS app] Look up by ${name} request received.`); // Debugging line
   
-  // Perform search using RedisSearch
+  
   try {
-    const searchResults = await redisClient.search('studentsByName', `@name:${name}*`);
-    if(!searchResults){ // Validation step
+    // Perform a search using the RedisSearch index
+    const searchResults = await redisClient.sendCommand('FT.SEARCH', ['studentsByName', `@name:${name}*`]);
+
+    // Validation step
+    if(!searchResults){ 
       console.log('[JS app] Search had no results. The system DB might be empty.'); // Debugging line
       res.status(500).json({ success: false, message: 'Search had no results. The system DB might be empty.' });
     }
@@ -249,24 +252,8 @@ async function createRedisSearchIndex() {
     // Redis index name
     const indexName = 'studentsByName';
 
-    // Define the index structure and options
-    const indexDefinition = {
-      fields: [
-        { name: 'id', type: 'STRING'},
-        { name: 'name', type: 'TEXT' },
-        { name: 'description', type: 'TEXT' },
-        { name: 'employers', type: 'TEXT' },
-        { name: 'start_date', type: 'DATE' },
-        { name: 'end_date', type: 'DATE' },
-        // Add other fields as needed
-      ],
-      index: {
-        indexType: 'HASH',
-      },
-    };
-
     // Create the RedisSearch index
-    const result = await redisClient.ft(indexName, indexDefinition);
+    const result = await redisClient.sendCommand('FT.CREATE', [indexName, 'ON', 'HASH', 'PREFIX', '1', 'student:', 'SCHEMA', 'name', 'TEXT', 'description', 'TEXT', 'employers', 'TEXT', 'start_date', 'DATE', 'end_date', 'DATE']);
 
     console.log('RedisSearch index created:', result);
   } catch (error) {
