@@ -105,4 +105,4 @@ Improve the Student parameters
 
 Improve the search operation
 
-- [] Another potential solution is to group students (Redis keys) into sets, lists, or sorted sets based on certain student parameter.
+- [ ] Another potential solution is to group students (Redis keys) into sets, lists, or sorted sets based on certain student parameter.
