@@ -2,104 +2,215 @@
 
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
     <script src="https://cdn.jsdelivr.net/npm/vue@2"></script>
     <title>Student Management System</title>
-    
+    <style>
+        /* Add your custom styles here */
+        body {
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        h1 {
+            color: #343a40; /* Gray - Dark */
+        }
+
+        h2 {
+            color: #6c757d; /* Gray */
+        }
+
+        h3 {
+            color: #08b43c94; /* info color*/
+        }
+
+        ul {
+            list-style: none;
+            padding: 0;
+        }
+
+        li {
+            display: inline-block;
+            margin-right: 10px;
+        }
+
+        form {
+            max-width: 600px; /* Set a maximum width for the form */
+            margin: 0 auto; /* Center the form horizontally */
+            padding-top: 20px; /* Add padding to the top of the form */
+        }
+
+        table {
+            width: 100%;
+            margin-top: 20px;
+            border-collapse: collapse;
+        }
+
+        th, td {
+            padding: 10px;
+            border: 1px solid #dee2e6; /* Bootstrap table border color */
+        }
+
+        button {
+            margin-right: 5px;
+        }
+    </style>
 </head>
+
 <body>
     <div id="app">
-        <h1>BINFO-CEP Student Management System</h1>
-        <ul>
-            <li><a href="#" @click="showCreateStudentForm">Register Student</a></li>
-            <li><a href="#" @click="showCheckStudentSection">Check Student</a></li>
-            <!--<li><a href="#" @click="getTotalStudents">Total Students Registered</a></li>-->
-        </ul>
+        <div class="container">
+            <h1 class="display-4">BINFO-CEP Student Management System</h1>
+            <ul class="nav">
+                <li class="nav-item">
+                    <a class="nav-link" href="#" @click="showCreateStudentForm">Register Student</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="#" @click="showCheckStudentSection">Check Student</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="#" @click="showAllStudentsSection">All Students</a>
+                </li>
+            </ul>
+        </div>
 
         <!-- Operation Messages -->
-        <h3 id="Message">{{ Message }}</h3>
-
+        <div class="container">
+            <h3 class="mt-4" id="Message">{{ Message }}</h3>
+        </div>
+       
+        <!-- Forms -->
         <div v-show="createStudentFormVisible">
-            <h2>Register Student</h2>
-            <!-- Form for creating a new student -->
-            <form @submit.prevent="createStudent">
-                <label for="studentName"> Student Name:</label>
-                <input type="text" id="studentName" v-model="newStudent.name" required>
+            <div class="container">
+                <h2>Register Student Form</h2>
+                <!-- Form for creating a new student -->
+                <form @submit.prevent="createStudent">
+                    <!-- Add Bootstrap form control classes -->
+                    <div class="form-group">
+                        <label for="studentName">Student Name:</label>
+                        <input type="text" class="form-control" id="studentName" v-model="newStudent.name" required>
+                    </div>
 
-                <label for="studentDescription">Student Description :</label>
-                <input type="text" id="studentDescription" v-model="newStudent.description" required>
+                    <div class="form-group">
+                        <label for="studentDescription">Student Description:</label>
+                        <input type="text" class="form-control" id="studentDescription" v-model="newStudent.description" required>
+                    </div>
 
-                <label for="studentEmployers">Student Employers:</label>
-                <input type="text" id="studentEmployers" v-model="newStudent.employers">
+                    <div class="form-group">
+                        <label for="studentEmployers">Student Employer:</label>
+                        <input type="text" class="form-control" id="studentEmployers" v-model="newStudent.employers" required>
+                    </div>
 
-                <label for="studentStartDate">Start Date:</label>
-                <input type="date" id="studentStartDate" v-model="newStudent.start_date" required>
+                    <div class="form-group">
+                        <label for="studentStartDate">Start Date:</label>
+                        <input type="date" class="form-control" id="studentStartDate" v-model="newStudent.start_date" required>
+                    </div>
 
-                <label for="studentEndDate">End Date:</label>
-                <input type="date" id="studentEndDate" v-model="newStudent.end_date" required>
+                    <div class="form-group">
+                        <label for="studentEndDate">End Date:</label>
+                        <input type="date" class="form-control" id="studentEndDate" v-model="newStudent.end_date" required>
+                    </div>
 
-                <button type="submit">Register Student</button>
-            </form>
+                    <!-- Add other form controls with form-group class as needed -->
+
+                    <button type="submit" class="btn btn-primary">Register Student</button>
+                </form>
+            </div>
         </div>
 
         <div v-show="checkStudentSectionVisible">
-            <h2>Check Student</h2>
-        
-            <!-- Form for checking a student -->
-            <form @submit.prevent="checkStudent">
-                <label for="checkStudentName">Student Name:</label>
-                <input type="text" id="checkStudentName" v-model="checkStudentName" required>
-        
-                <button @click="checkStudent()">Check Student</button>
-            </form>
-        
-            <!-- Table to display student details -->
-            <table v-if="studentDataList.length > 0">
-                <thead>
-                <tr>
-                    <th>Student ID</th>
-                    <th>Student Name</th>
-                    <th>Student Description</th>
-                    <th>Student Employers</th>
-                    <th>Start Date</th>
-                    <th>End Date</th>
-                    <!-- Add other properties as needed -->
-                    <th>Actions</th>
-                </tr>
-                </thead>
-                <tbody>
-                <tr v-for="student in studentDataList" :key="student.id">
-                    <td>{{ student.id }}</td>
-                    <!-- Display editable cells -->
-                    <td contenteditable="true" type="text" :ref="`name-${student.id}`">
-                        {{ student.name }}
-                    </td>
-                    <td contenteditable="true" type="text" :ref="`description-${student.id}`">
-                        {{ student.description }}
-                    </td>
-                    <td contenteditable="true" type="text" :ref="`employers-${student.id}`">
-                        {{ student.employers }}
-                    </td>
-                    <td contenteditable="true" type="date" :ref="`start_date-${student.id}`">
-                        {{ student.start_date }}
-                    </td>
-                    <td contenteditable="true" type="date" :ref="`end_date-${student.id}`">
-                        {{ student.end_date }}
-                    </td>
-                    <!-- Add other properties as needed -->
-                    <td>
-                    <button @click="updateStudent(student.id)">Update</button>
-                    <button @click="deleteStudent(student.id)">Delete</button>
-                    </td>
-                </tr>
-                </tbody>
-            </table>
-        
-        
+            <div class="container">
+                <h2>Check Student Form</h2>
+                <!-- Form for checking a student -->
+                <form @submit.prevent="checkStudentByName" class="form-inline">
+                    <div class="form-group">
+                        <label for="checkStudentNameForm" class="mr-2">Student Name:</label>
+                        <input type="text" class="form-control" id="checkStudentNameForm" v-model="checkStudentNameForm" required>
+                    </div>
 
+                    <button @click="checkStudentByName(document.getElementById('checkStudentNameForm'))" class="btn btn-primary">Check Student</button>
+                </form>
 
-    <script src="main.js"></script>
+                <!-- Table to display student details -->
+                <table v-if="studentDataList.length > 0" class="table table-bordered table-striped">
+                    <thead class="thead-dark">
+                        <tr>
+                            <th>Student ID</th>
+                            <th>Student Name</th>
+                            <th>Student Description</th>
+                            <th>Student Employers</th>
+                            <th>Start Date</th>
+                            <th>End Date</th>
+                            <!-- Add other properties as needed -->
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr v-for="student in studentDataList" :key="student.id">
+                            <!-- Add Bootstrap table classes -->
+                            <td>{{ student.id }}</td>
+                            <td contenteditable="true" type="text" :ref="`name-${student.id}`">{{ student.name }}</td>
+                            <td contenteditable="true" type="text" :ref="`description-${student.id}`">{{ student.description }}</td>
+                            <td contenteditable="true" type="text" :ref="`employers-${student.id}`">{{ student.employers }}</td>
+                            <td contenteditable="true" type="date" :ref="`start_date-${student.id}`">{{ student.start_date }}</td>
+                            <td contenteditable="true" type="date" :ref="`end_date-${student.id}`">{{ student.end_date }}</td>
+                            <!-- Add other properties as needed -->
+                            <td>
+                                <button @click="updateStudent(student.id)" class="btn btn-sm btn-success">Update</button>
+                                <button @click="deleteStudent(student.id)" class="btn btn-sm btn-danger">Delete</button>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>            
+        </div>
+        
+        <div v-show="showAllStudentsSectionVisible">
+            <div class="container">
+                <h2>Registered Students List</h2>
+                <button @click="checkAllStudent()" class="btn btn-primary">List All Students</button>
+                
+                <!-- Table to display student details -->
+                <table v-if="studentDataList.length > 0" class="table table-bordered table-striped">
+                    <thead class="thead-dark">
+                        <tr>
+                            <th>Student ID</th>
+                            <th>Student Name</th>
+                            <th>Student Description</th>
+                            <th>Student Employers</th>
+                            <th>Start Date</th>
+                            <th>End Date</th>
+                            <!-- Add other properties as needed -->
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr v-for="student in studentDataList" :key="student.id">
+                            <!-- Add Bootstrap table classes -->
+                            <td>{{ student.id }}</td>
+                            <td contenteditable="true" type="text" :ref="`name-${student.id}`">{{ student.name }}</td>
+                            <td contenteditable="true" type="text" :ref="`description-${student.id}`">{{ student.description }}</td>
+                            <td contenteditable="true" type="text" :ref="`employers-${student.id}`">{{ student.employers }}</td>
+                            <td contenteditable="true" type="date" :ref="`start_date-${student.id}`">{{ student.start_date }}</td>
+                            <td contenteditable="true" type="date" :ref="`end_date-${student.id}`">{{ student.end_date }}</td>
+                            <!-- Add other properties as needed -->
+                            <td>
+                                <button @click="checkStudent(student.name)" class="btn btn-sm btn-success">Check</button>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <script src="main.js"></script>
+    </div>
 </body>
+
 </html>

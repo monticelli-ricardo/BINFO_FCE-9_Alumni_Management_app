@@ -156,10 +156,10 @@ app.delete('/students/delete/:id', async (req, res) => {
     // Delete Operation, delete student from Redis database
     if(await redisClient.del(existingStudent.id)){
       //Notify the user about the successful operation
-      res.json({ success: true, message: 'Student deleted successfully' });
+      res.json({ success: true, message: 'Student deleted successfully.', existingStudent });
       console.log('[JS app] Student deleted successfully.'); // Debugging line
     } else { // Notify the user about the UNsuccessful operation
-      res.json({ success: false, message: 'Student deleted successfully' });
+      res.json({ success: false, message: 'Delete operation failed.'});
       console.log('[JS app] Delete operation failed.'); // Debugging line
     }
 
@@ -227,6 +227,40 @@ app.get('/students/getNames/:name', async (req, res) => {
     // Return matching students to the client
     res.json(matchingStudents);
     console.log('[JS app] Response back to client: ', matchingStudents); // Debugging line
+ 
+  } catch (error) {
+    console.error('Error retrieving students by name from Redis:', error.message);
+    res.status(500).json({ success: false, message: 'Internal server error' });
+  }
+});
+
+// API to GET All registed students by name parameter
+app.get('/students/getAllStudents/', async (req, res) => {
+
+  const allStudents = []; // Response initialized
+  console.log(`[JS app] Look up all students request received.`); // Debugging line 
+  
+  try {
+    // Get all Keys from Redis, not the most efficient operation
+    const keys = await redisClient.keys('*');
+
+    // Validation step
+    if(!keys){ 
+      console.log('[JS app] Search Operation failed. The system DB might be empty.'); // Debugging line
+      res.status(500).json({ success: false, message: 'Search Operation failed. The system DB might be empty.' });
+    } else {
+      // iterate over the keys to pass only the candidates
+      for (const key of keys) {
+        // Pick a student from the Redis DB
+        const data = await redisClient.get(key);
+        const student = JSON.parse(data);
+        allStudents.push(student);
+      }
+    }
+    
+    // Return matching students to the client
+    res.json(allStudents);
+    console.log('[JS app] Response back to client: "allStudents" array'); // Debugging line
  
   } catch (error) {
     console.error('Error retrieving students by name from Redis:', error.message);
