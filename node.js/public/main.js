@@ -121,7 +121,7 @@ new Vue({
                 alert( 'Student deleted successfully.');
                 // Update local data or trigger a fetch if needed
                 this.getTotalStudents();
-                this.checkStudentNameForm(result.existingStudent.name);
+                this.resetForm();
             } else {
                 console.error('Failed to delete student:', result.message);
                 alert( 'Failed to delete student:', result.message);
