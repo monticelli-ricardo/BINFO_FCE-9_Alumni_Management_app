@@ -3,7 +3,7 @@
 
 ## Description
 This Docker based web-application that provides a solution to an Alumni Management System.
-It let's the user create / edit or update / delete / show BINFO-CEP alumni contact information. A "BINFO-CEP alumni" object has (at least) a unique ID, a person name, the information about the current and possibly past employers, study start and end dates and a short description. All these objects are stored within a Redis DB.
+It let's the user create / edit or update / delete / show BINFO-CEP alumni contact information. A "BINFO-CEP alumni" object has (at least) a unique ID, a person name, the information about the current and possibly past employers, study start and end dates and a short description. All these objects are stored within a Redis DB.  
 
 ### How?
 ### A landing page with several operations: 
@@ -92,13 +92,17 @@ It let's the user create / edit or update / delete / show BINFO-CEP alumni conta
 
 ## Potential Application Upgrades
 
-- Improve the search operation, an optional solution is to use RedisSearch Module instead of getting all Redis keys ( _redisClient.keys('*')_ ).
-   - []  Update Redis Dockerfile, to install RedisSearch Module and add it to the server start.
-   - []  Code a JS function ( _createRedisSearchIndex()_ and _redisClient.ft.create('indexName', 'indexSchema', 'dataTypeIndexing', 'indexPrefixes')_ ), to create a Redis Index and call it.
-   - []  Update the API to GET students by name parameter, replacing _redisClient.keys(*)_ by _redisClient.ft.search('IndexName', '@name:${name}*')_ .
-   - []  Update the API to POST students, ensuring the _'indexName',_ is used as parameter when the student is going to be added.
-   - []  Update the API to PUT students, ensuring the _'indexName',_ is used as parameter when the student is updated.
+Improve the search operation, an optional solution is to use RedisSearch Module instead of getting all Redis keys ( _redisClient.keys('*')_ ).
 
-- [] Improve the Student parameters, by adding specific parameters like: {School Department, Age, Sex, last_update, etc.}
+- [ ]  Update Redis Dockerfile, to install RedisSearch Module and add it to the server start.
+- [ ]  Code a JS function ( _createRedisSearchIndex()_ and _redisClient.ft.create('indexName', 'indexSchema', 'dataTypeIndexing', 'indexPrefixes')_ ), to create a Redis Index and call it.
+- [ ]  Update the API to GET students by name parameter, replacing _redisClient.keys(*)_ by _redisClient.ft.search('IndexName', '@name:${name}*')_ .
+- [ ]  Update the API to POST students, ensuring the _'indexName',_ is used as parameter when the student is going to be added.
+- [ ]  Update the API to PUT students, ensuring the _'indexName',_ is used as parameter when the student is updated.
 
-- [] Improve the search operation, another potential solution is to group students (Redis keys) into sets, lists, or sorted sets based on certain student parameter.
+Improve the Student parameters
+- [ ] For example adding specific parameters like: {School Department, Age, Sex, last_update, etc.}
+
+Improve the search operation
+
+- [] Another potential solution is to group students (Redis keys) into sets, lists, or sorted sets based on certain student parameter.
