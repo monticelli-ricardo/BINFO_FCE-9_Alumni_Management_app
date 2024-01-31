@@ -49,9 +49,9 @@ It let's the user create / edit or update / delete / show BINFO-CEP alumni conta
 
       1.- The user looks for the student using the operation `Check Student`.
 
-      2.- The user provides a name and submit its with the function `checkStudent(studentName)` via API GET method.
+      2.- The user provides a name and submit its with the function _'checkStudent()'_ via API GET method.
 
-      3.- The system searches in the DB for all the students with `student.name` similar to value `studentName` and returns them in a table displayed in screen.
+      3.- The system searches in the DB for all the students with `student.name` similar to the user provided value and returns them in a table displayed in screen.
 
       4.- The user navigates the table for the concerned the student and clicks on the delete button that will trigger the function: `deleteStudent(id)` via API DELETE method.
 
@@ -66,9 +66,9 @@ It let's the user create / edit or update / delete / show BINFO-CEP alumni conta
 
       1.- The user looks for the student using the operation `Check Student`.
 
-      2.- The user provides a name and submit its with the function `checkStudent(studentName)` via API GET method.
+      2.- The user provides a name and submit its with the function _'checkStudent()'_ via API GET method.
 
-      3.- The system searches in the DB for all the students with `student.name` similar to value `studentName` and returns them in a table displayed in screen.
+      3.- The system searches in the DB for all the students with `student.name` similar to the user provided value and returns them in a table displayed in screen.
 
       4.- The user navigates the table for the concerned the student and clicks on the update button that will trigger the function: `updateStudent(id)` via API PUT method.
 
@@ -91,10 +91,12 @@ It let's the user create / edit or update / delete / show BINFO-CEP alumni conta
 ## Potential Application Upgrades
 
 - Improve the search operation, an optional solution is to use RedisSearch Module instead of getting all Redis keys ( _redisClient.keys('*')_ ).
-   - [x]  Update Redis Dockerfile, to install RedisSearch Module and add it to the server start.
-   - [x]  Code a JS function ( _createRedisSearchIndex()_ ), to create a Redis Index and call it.
-   - [x]  Update the API to GET students by name parameter, replacing _redisClient.keys(*)_ by __redisClient.search('IndexName', '@name:${name}*')_ .
+   - []  Update Redis Dockerfile, to install RedisSearch Module and add it to the server start.
+   - []  Code a JS function ( _createRedisSearchIndex()_ and _redisClient.ft.create('indexName', 'indexSchema', 'dataTypeIndexing', 'indexPrefixes')_ ), to create a Redis Index and call it.
+   - []  Update the API to GET students by name parameter, replacing _redisClient.keys(*)_ by _redisClient.ft.search('IndexName', '@name:${name}*')_ .
+   - []  Update the API to POST students, ensuring the _'indexName',_ is used as parameter when the student is going to be added.
+   - []  Update the API to PUT students, ensuring the _'indexName',_ is used as parameter when the student is updated.
 
-- [] Improve the Student parameters, by adding: {School Department, Age, Sex, last_update, etc.}
+- [] Improve the Student parameters, by adding specific parameters like: {School Department, Age, Sex, last_update, etc.}
 
-- [] Improve the search operation by grouping students (Redis keys) into sets, lists, or sorted sets based on certain student parameter.
+- [] Improve the search operation, another potential solution is to group students (Redis keys) into sets, lists, or sorted sets based on certain student parameter.
