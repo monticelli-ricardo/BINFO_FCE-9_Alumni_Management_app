@@ -145,9 +145,7 @@ new Vue({
         })
         .catch(error => {
             console.error('Error:', response);
-            alert(
-              'Error collecting information. ', error.message
-            );
+            alert( 'Error collecting information. ', error.message);
         });
       },
 
@@ -163,8 +161,8 @@ new Vue({
           apiUrl = `/students/getNames/${encodeURIComponent(studentName)}`;
         } else if (inputElement instanceof Event) {
           // If arg is an Event (e.g., a SubmitEvent), get the input element from the event
-          inputElement = inputElement.target.querySelector('#checkStudentNameForm');
-          studentName = inputElement ? inputElement.value : '';
+          const arg = inputElement.target.querySelector('#checkStudentNameForm');
+          studentName = arg.value;
         } else {
           studentName = inputElement;
           apiUrl = `/students/getNames/${studentName}`;
@@ -184,7 +182,7 @@ new Vue({
             }
           } else {
             console.error('Invalid or empty response:', data.message);
-            alert('An error occurred: Invalid or empty response');
+            alert('Invalid or empty response: ', data.message);
           }
         } catch (error) {
           console.error('Error:', error);
@@ -212,7 +210,7 @@ new Vue({
             }
           } else {
             console.error('Invalid or empty response:', data.message);
-            alert('An error occurred: Invalid or empty response');
+            alert('Invalid or empty response: ', data.message);
           }
         } catch (error) {
           console.error('Error:', error);

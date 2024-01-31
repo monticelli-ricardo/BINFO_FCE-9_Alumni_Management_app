@@ -205,9 +205,9 @@ app.get('/students/getNames/:name', async (req, res) => {
     const keys = await redisClient.keys('*');
 
     // Validation step
-    if(!keys){ 
+    if(keys === null || keys === undefined || keys.length < 1){ 
       console.log('[JS app] Search Operation failed. The system DB might be empty.'); // Debugging line
-      res.status(500).json({ success: false, message: 'Search Operation failed. The system DB might be empty.' });
+       return res.status(500).json({ success: false, message: 'Search Operation failed. The system DB might be empty.' });
     } else {
       // iterate over the keys to pass only the candidates
       for (const key of keys) {
@@ -245,9 +245,9 @@ app.get('/students/getAllStudents/', async (req, res) => {
     const keys = await redisClient.keys('*');
 
     // Validation step
-    if(!keys){ 
+    if(keys === null || keys === undefined || keys.length < 1){ 
       console.log('[JS app] Search Operation failed. The system DB might be empty.'); // Debugging line
-      res.status(500).json({ success: false, message: 'Search Operation failed. The system DB might be empty.' });
+       return res.status(500).json({ success: false, message: 'Search Operation failed. The system DB might be empty.' });
     } else {
       // iterate over the keys to pass only the candidates
       for (const key of keys) {
@@ -274,9 +274,9 @@ app.get('/students/total', async (req, res) => {
     console.log('[JS app] Getting the total number of registered students.'); // Debugging line
     // Use a Redis command to get the total number of keys (students)
     const totalStudents = await redisClient.dbSize();
-    if(!totalStudents){ // Notify the user in case of UNsuccessful operation
-      console.log('[JS app]  Error getting total students:', res.json({ success: false, totalStudents }));
-      return res.status(500).json({ success: false, message: 'Internal server error' });
+    if(!totalStudents || totalStudents === 0){ // Notify the user in case of UNsuccessful operation
+      console.log('[JS app]  Error getting total students, the DB might be empty.');
+      return res.status(500).json({ success: false, message: 'Internal server error , the DB might be empty.' });
     }
     // Notify the user in case of successful operation
     console.log('[JS app] Total numbered of registered students: ' , totalStudents); // Debugging line
