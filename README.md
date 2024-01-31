@@ -14,6 +14,8 @@ It let's the user create / edit or update / delete / show BINFO-CEP alumni conta
 
 * __Total number of students registered__, this feature checks how many students are registered in the system and display the output in the screen.
 
+* __List all registered students__, this feature offers the possibility to users to list all available studented registered in the system.
+
 
 ### Systems messages raised based on specific events:
 
